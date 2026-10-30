@@ -32,9 +32,32 @@
 ## 备份与恢复
 
 版本和配置备份位于 `~/Library/Application Support/Lingora/FigmaPlugin/`。
-正常退出 Figma 后，可把相应 `backups/<时间与进程号>/settings.json` 复制回
-`~/Library/Application Support/Figma/settings.json` 再重启。整份备份恢复会同时还原之后修改的其他设置，
-请核对时间；备份含本机设置，不要公开。安装器不会自动删除旧版本和备份。
+每次安装都会新建备份；出现“配置备份”提示不代表安装失败，也不代表旧插件数据未清理。
+备份保存的是安装前的 Figma 本机配置（包括插件注册），不是设计稿或翻译内容。安装器目前不会自动回滚。
+
+如果安装失败，需要恢复到安装前：
+
+1. 保存并同步设计稿，然后正常退出 Figma（按 ⌘Q，而不只是关闭窗口）。
+2. 找到本次安装输出的“配置备份”路径，将下面的 `<备份目录名>` 替换为该路径最后一段的时间与进程号。
+3. 在终端执行以下命令；它会检查 Figma 已退出、备份文件存在，再恢复配置并重开 Figma。
+
+```bash
+LINGORA_BACKUP="$HOME/Library/Application Support/Lingora/FigmaPlugin/backups/<备份目录名>/settings.json"
+
+if /usr/bin/pgrep -x Figma >/dev/null; then
+  echo "请先正常退出 Figma，再执行恢复。"
+elif [ ! -f "$LINGORA_BACKUP" ]; then
+  echo "未找到备份文件，请核对安装时显示的备份路径。"
+else
+  /bin/cp "$LINGORA_BACKUP" "$HOME/Library/Application Support/Figma/settings.json" \
+    && /usr/bin/open -a Figma
+fi
+```
+
+恢复整份备份会同时还原安装后修改的其他 Figma 设置，请核对备份时间。
+它不会修改设计稿，也不会自动删除已下载的插件文件。
+若目录内只有 `settings-absent`，说明安装前没有配置文件，不适用上述复制恢复方式。
+备份含本机设置，不要公开。安装器不会自动删除旧版本和备份。
 
 ## 验证边界
 
